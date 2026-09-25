@@ -20,8 +20,8 @@
         Budgets
     </a>
 
-    <a href="<?php echo BASE_URL; ?>/goals/index.php">
-        Goals
+    <a href="<?php echo BASE_URL; ?>\budgets\saving-goals\index.php">
+        GOALS
     </a>
 
     <a href="<?php echo BASE_URL; ?>/reports/index.php">

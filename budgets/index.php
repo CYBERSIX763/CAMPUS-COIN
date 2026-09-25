@@ -12,6 +12,7 @@ $page_title = "Budgets";
 $error = "";
 $success = "";
 
+
 /*
 |--------------------------------------------------------------------------
 | Create Budget
@@ -27,7 +28,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $month_year = trim($_POST["month_year"]);
     $alert_percentage = intval($_POST["alert_percentage"]);
 
-    // Basic validation
+    // Check required fields
     if ($category_id <= 0 || $amount <= 0 || $month_year == "") {
 
         $error = "Please fill in all required fields.";
@@ -40,7 +41,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         /*
         |--------------------------------------------------------------------------
-        | Check that the selected category is an expense category
+        | Check Category
         |--------------------------------------------------------------------------
         */
 
@@ -63,17 +64,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $category_result = $stmt->get_result();
 
+        $stmt->close();
+
         if ($category_result->num_rows == 0) {
 
             $error = "Invalid expense category.";
 
         } else {
 
-            $stmt->close();
-
             /*
             |--------------------------------------------------------------------------
-            | Check for an existing budget
+            | Check Existing Budget
             |--------------------------------------------------------------------------
             */
 
@@ -97,13 +98,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             $existing_result = $stmt->get_result();
 
+            $stmt->close();
+
             if ($existing_result->num_rows > 0) {
 
                 $error = "A budget already exists for this category and month.";
 
             } else {
-
-                $stmt->close();
 
                 /*
                 |--------------------------------------------------------------------------
@@ -135,13 +136,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $error = "Failed to create budget.";
 
                 }
+
+                $stmt->close();
             }
-
         }
-
-        $stmt->close();
     }
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -166,9 +167,10 @@ $category_stmt->execute();
 
 $categories = $category_stmt->get_result();
 
+
 /*
 |--------------------------------------------------------------------------
-| Get User Budgets
+| Get Budgets + Calculate Expenses
 |--------------------------------------------------------------------------
 */
 
@@ -179,12 +181,31 @@ $budget_stmt = $conn->prepare(
         b.month_year,
         b.alert_percentage,
         b.is_active,
-        c.name AS category_name
+        c.name AS category_name,
+
+        COALESCE(SUM(e.amount), 0) AS total_spent
+
      FROM budgets b
+
      INNER JOIN categories c
         ON b.category_id = c.category_id
+
+     LEFT JOIN expenses e
+        ON e.user_id = b.user_id
+        AND e.category_id = b.category_id
+        AND e.expense_date = b.month_year
+
      WHERE b.user_id = ?
      AND b.is_active = 1
+
+     GROUP BY
+        b.budget_id,
+        b.amount,
+        b.month_year,
+        b.alert_percentage,
+        b.is_active,
+        c.name
+
      ORDER BY b.month_year DESC, c.name ASC"
 );
 
@@ -193,6 +214,13 @@ $budget_stmt->bind_param("i", $user_id);
 $budget_stmt->execute();
 
 $budgets = $budget_stmt->get_result();
+
+
+/*
+|--------------------------------------------------------------------------
+| Page
+|--------------------------------------------------------------------------
+*/
 
 require_once "../includes/header.php";
 require_once "../includes/navbar.php";
@@ -207,7 +235,7 @@ require_once "../includes/sidebar.php";
     </h1>
 
     <p class="page-description">
-        Set spending limits for your expense categories.
+        Set spending limits and track your expenses.
     </p>
 
 
@@ -359,7 +387,7 @@ require_once "../includes/sidebar.php";
                 >
 
                 <small>
-                    You will later receive an alert when spending reaches this percentage.
+                    Alert level for this budget.
                 </small>
 
             </div>
@@ -403,7 +431,15 @@ require_once "../includes/sidebar.php";
                     </th>
 
                     <th>
-                        Amount
+                        Budget
+                    </th>
+
+                    <th>
+                        Spent
+                    </th>
+
+                    <th>
+                        Progress
                     </th>
 
                     <th>
@@ -414,14 +450,34 @@ require_once "../includes/sidebar.php";
                         Alert At
                     </th>
 
-                <th>
-                    Actions
-                </th>
+                    <th>
+                        Actions
+                    </th>
 
                 </tr>
 
 
                 <?php while ($budget = $budgets->fetch_assoc()) { ?>
+
+                    <?php
+
+                    $budget_amount = floatval($budget["amount"]);
+
+                    $total_spent = floatval($budget["total_spent"]);
+
+                    // Calculate percentage
+                    if ($budget_amount > 0) {
+
+                        $percentage = ($total_spent / $budget_amount) * 100;
+
+                    } else {
+
+                        $percentage = 0;
+
+                    }
+
+                    ?>
+
 
                     <tr>
 
@@ -429,44 +485,90 @@ require_once "../includes/sidebar.php";
                             <?php echo htmlspecialchars($budget["category_name"]); ?>
                         </td>
 
+
                         <td>
-                            Rs. <?php echo number_format($budget["amount"], 2); ?>
+                            Rs.
+                            <?php echo number_format($budget_amount, 2); ?>
                         </td>
+
+
+                        <td>
+                            Rs.
+                            <?php echo number_format($total_spent, 2); ?>
+                        </td>
+
+
+                        <td>
+
+                            <?php if ($percentage > 100) { ?>
+
+                                <strong>
+                                    <?php echo number_format($percentage, 1); ?>%
+                                </strong>
+
+                                <br>
+
+                                <small>
+                                    Budget exceeded
+                                </small>
+
+                            <?php } else { ?>
+
+                                <?php echo number_format($percentage, 1); ?>% used
+
+                                <?php if ($percentage >= $budget["alert_percentage"]) { ?>
+
+                                    <br>
+
+                                    <small>
+                                        Alert level reached
+                                    </small>
+
+                                <?php } ?>
+
+                            <?php } ?>
+
+                        </td>
+
 
                         <td>
                             <?php echo htmlspecialchars($budget["month_year"]); ?>
                         </td>
 
+
                         <td>
                             <?php echo htmlspecialchars($budget["alert_percentage"]); ?>%
                         </td>
+
+
                         <td>
 
-                <a
-                href="edit.php?id=<?php echo $budget["budget_id"]; ?>"
-                class="btn"
-                style="
-                background-color: #e5e7eb;
-                color: #333;
-                "
-                >
-                 Edit
-                </a>
+                            <a
+                                href="edit.php?id=<?php echo $budget["budget_id"]; ?>"
+                                class="btn"
+                                style="
+                                    background-color: #e5e7eb;
+                                    color: #333;
+                                "
+                            >
+                                Edit
+                            </a>
 
-                    <a
-                        href="delete.php?id=<?php echo $budget["budget_id"]; ?>"
-                        class="btn"
-                        style="
-                        background-color: #fee2e2;
-                        color: #991b1b;
-                        margin-left: 5px;
-                        "
-                        onclick="return confirm('Are you sure you want to remove this budget?');"
-                    >
-                        Delete
-                    </a>
 
-                    </td>
+                            <a
+                                href="delete.php?id=<?php echo $budget["budget_id"]; ?>"
+                                class="btn"
+                                style="
+                                    background-color: #fee2e2;
+                                    color: #991b1b;
+                                    margin-left: 5px;
+                                "
+                                onclick="return confirm('Are you sure you want to remove this budget?');"
+                            >
+                                Delete
+                            </a>
+
+                        </td>
 
                     </tr>
 
