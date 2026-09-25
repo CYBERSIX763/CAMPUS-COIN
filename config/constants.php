@@ -18,6 +18,6 @@ define("DATE_FORMAT", "Y-m-d");
 |--------------------------------------------------------------------------
 */
 
-define("BASE_URL", "/CAMPUS-COIN");
+define("BASE_URL", "http://localhost/CAMPUS-COIN/");
 
 ?>

@@ -1,7 +1,8 @@
+```php
 <aside class="sidebar">
 
     <div class="sidebar-title">
-        Main Menu
+        MAIN MENU
     </div>
 
     <a href="<?php echo BASE_URL; ?>/dashboard/index.php">
@@ -20,8 +21,8 @@
         Budgets
     </a>
 
-    <a href="<?php echo BASE_URL; ?>\budgets\saving-goals\index.php">
-        GOALS
+    <a href="<?php echo BASE_URL; ?>/goals/index.php">
+        Goals
     </a>
 
     <a href="<?php echo BASE_URL; ?>/reports/index.php">
@@ -32,16 +33,47 @@
         Saving Tips
     </a>
 
+    <!-- Notifications -->
+    <a
+        href="<?php echo BASE_URL; ?>/notifications/index.php"
+        style="
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: static !important;
+            height: auto !important;
+            color: #333 !important;
+        "
+    >
+        Notifications
+    </a>
+
+    <!-- Notes -->
+    <a
+        href="<?php echo BASE_URL; ?>/notes/index.php"
+        style="
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: static !important;
+            height: auto !important;
+            color: #333 !important;
+        "
+    >
+        Notes
+    </a>
+
     <div class="sidebar-title">
-        Account
+        ACCOUNT
     </div>
 
     <a href="<?php echo BASE_URL; ?>/profile/index.php">
         Profile
     </a>
 
-    <a href="<?php echo BASE_URL; ?>/profile/preferences.php">
+    <a href="<?php echo BASE_URL; ?>/settings/index.php">
         Settings
     </a>
 
 </aside>
+```

@@ -1,5 +1,4 @@
 <?php
-
 require_once "../config/config.php";
 
 // User must be logged in
@@ -268,7 +267,6 @@ require_once "../includes/sidebar.php";
 
     </div>
 
-
     <!-- Existing Saving Goals -->
 
     <div class="card">
@@ -278,6 +276,7 @@ require_once "../includes/sidebar.php";
         </h2>
 
         <br>
+
 
         <?php if ($goals->num_rows > 0) { ?>
 
@@ -309,11 +308,36 @@ require_once "../includes/sidebar.php";
                     <th>
                         Status
                     </th>
-
+                    <th>Progress</th>
+                    <th>Remaining</th>
+                    <th>
+                        Action
+                    </th>
                 </tr>
 
 
                 <?php while ($goal = $goals->fetch_assoc()) { ?>
+                <?php
+
+$progress = 0;
+
+if ($goal["target_amount"] > 0) {
+
+    $progress = ($goal["current_amount"] / $goal["target_amount"]) * 100;
+
+}
+
+if ($progress > 100) {
+    $progress = 100;
+}
+
+$remaining = $goal["target_amount"] - $goal["current_amount"];
+
+if ($remaining < 0) {
+    $remaining = 0;
+}
+
+?>
 
                     <tr>
 
@@ -342,7 +366,43 @@ require_once "../includes/sidebar.php";
                         <td>
                             <?php echo htmlspecialchars($goal["status"]); ?>
                         </td>
+                        <td>
+    <?php echo number_format($progress, 1); ?>%
+</td>
 
+<td>
+    Rs. <?php echo number_format($remaining, 2); ?>
+</td>
+
+<td>
+
+    <?php if ($goal["status"] == "active") { ?>
+
+        <a
+            href="add-savings.php?id=<?php echo $goal["goal_id"]; ?>"
+            class="btn"
+        >
+            Add Savings
+        </a>
+
+    <?php } ?>
+
+    <a
+        href="edit.php?id=<?php echo $goal["goal_id"]; ?>"
+        class="btn"
+    >
+        Edit
+    </a>
+
+    <a
+        href="delete.php?id=<?php echo $goal["goal_id"]; ?>"
+        class="btn"
+        onclick="return confirm('Are you sure you want to delete this saving goal?');"
+    >
+        Delete
+    </a>
+
+</td>
                     </tr>
 
                 <?php } ?>
