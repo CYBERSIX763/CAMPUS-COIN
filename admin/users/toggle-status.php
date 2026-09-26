@@ -1,4 +1,3 @@
-```php
 <?php
 
 require_once "../../config/config.php";
@@ -62,7 +61,9 @@ if ($user_id == getUserId()) {
 */
 
 $stmt = $conn->prepare(
-    "SELECT is_active
+    "SELECT
+        name,
+        is_active
      FROM users
      WHERE user_id = ?"
 );
@@ -92,8 +93,16 @@ if (!$user) {
 |--------------------------------------------------------------------------
 */
 
-$new_status = ($user["is_active"] == 1) ? 0 : 1;
+$old_status = intval($user["is_active"]);
 
+$new_status = ($old_status == 1) ? 0 : 1;
+
+
+/*
+|--------------------------------------------------------------------------
+| Update Status
+|--------------------------------------------------------------------------
+*/
 
 $stmt = $conn->prepare(
     "UPDATE users
@@ -109,7 +118,48 @@ $stmt->bind_param(
     $user_id
 );
 
-$stmt->execute();
+
+if ($stmt->execute()) {
+
+    /*
+    |--------------------------------------------------------------------------
+    | Create Admin Log
+    |--------------------------------------------------------------------------
+    */
+
+    if ($new_status == 1) {
+
+        $action = "activate_user";
+
+        $description =
+            "Activated user #" .
+            $user_id .
+            " (" .
+            $user["name"] .
+            ").";
+
+    } else {
+
+        $action = "deactivate_user";
+
+        $description =
+            "Deactivated user #" .
+            $user_id .
+            " (" .
+            $user["name"] .
+            ").";
+    }
+
+
+    logAdminAction(
+        getUserId(),
+        $action,
+        "user",
+        $user_id,
+        $description
+    );
+}
+
 
 $stmt->close();
 
@@ -117,4 +167,3 @@ $stmt->close();
 redirect("index.php");
 
 ?>
-```

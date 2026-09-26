@@ -1,4 +1,4 @@
-```php
+
 <?php
 
 require_once "../config/config.php";
@@ -269,4 +269,3 @@ require_once "../includes/sidebar.php";
 require_once "../includes/footer.php";
 
 ?>
-```

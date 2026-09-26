@@ -79,6 +79,10 @@ function getSuccessMessage()
 }
 
 
+
+
+
+
 // Get error message
 
 function getErrorMessage()
@@ -94,5 +98,49 @@ function getErrorMessage()
 
     return "";
 }
+
+function logAdminAction(
+    $admin_id,
+    $action,
+    $target_type,
+    $target_id,
+    $description
+) {
+
+    global $conn;
+
+    $stmt = $conn->prepare(
+        "INSERT INTO admin_logs
+        (
+            admin_id,
+            action,
+            target_type,
+            target_id,
+            description
+        )
+        VALUES (?, ?, ?, ?, ?)"
+    );
+
+    $stmt->bind_param(
+        "issis",
+        $admin_id,
+        $action,
+        $target_type,
+        $target_id,
+        $description
+    );
+
+   if (!$stmt->execute()) {
+
+    error_log(
+        "Admin log failed: " . $stmt->error
+    );
+
+}
+
+$stmt->close();
+}
+
+
 
 ?>

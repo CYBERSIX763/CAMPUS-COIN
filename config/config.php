@@ -65,4 +65,5 @@ if (basename($_SERVER['PHP_SELF']) == "config.php") {
     echo "<p>Campus Coin configuration is working!</p>";
 }
 
+
 ?>

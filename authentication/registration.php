@@ -87,6 +87,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 // Clear form values
                 $name = "";
                 $email = "";
+                redirect("../authentication/login.php");
 
             } else {
 

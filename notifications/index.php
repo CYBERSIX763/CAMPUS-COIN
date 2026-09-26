@@ -1,20 +1,42 @@
-```php
 <?php
 
 require_once "../config/config.php";
 
 
-// User must be logged in
+/*
+|--------------------------------------------------------------------------
+| User Must Be Logged In
+|--------------------------------------------------------------------------
+*/
+
 if (!isLoggedIn()) {
     redirect("../authentication/login.php");
 }
+
 
 $page_title = "Notifications";
 
 $user_id = getUserId();
 
 
-// Get user's notifications
+/*
+|--------------------------------------------------------------------------
+| Generate Budget Notifications
+|--------------------------------------------------------------------------
+|
+| create-budget-alert.php does NOT redirect when included here.
+|
+*/
+
+require_once "create-budget-alert.php";
+
+
+/*
+|--------------------------------------------------------------------------
+| Get User Notifications
+|--------------------------------------------------------------------------
+*/
+
 $stmt = $conn->prepare(
     "SELECT
         notification_id,
@@ -28,7 +50,10 @@ $stmt = $conn->prepare(
      ORDER BY created_at DESC"
 );
 
-$stmt->bind_param("i", $user_id);
+$stmt->bind_param(
+    "i",
+    $user_id
+);
 
 $stmt->execute();
 
@@ -36,6 +61,12 @@ $notifications = $stmt->get_result();
 
 $stmt->close();
 
+
+/*
+|--------------------------------------------------------------------------
+| Page
+|--------------------------------------------------------------------------
+*/
 
 require_once "../includes/header.php";
 require_once "../includes/navbar.php";
@@ -74,9 +105,17 @@ require_once "../includes/sidebar.php";
                 ">
 
                     <h3>
-                        <?php echo htmlspecialchars($notification["title"]); ?>
 
-                        <?php if ($notification["is_read"] == 0) { ?>
+                        <?php
+                        echo htmlspecialchars(
+                            $notification["title"]
+                        );
+                        ?>
+
+
+                        <?php
+                        if ($notification["is_read"] == 0) {
+                        ?>
 
                             <span style="
                                 font-size: 12px;
@@ -93,21 +132,37 @@ require_once "../includes/sidebar.php";
 
 
                     <p>
-                        <?php echo htmlspecialchars($notification["message"]); ?>
+                        <?php
+                        echo htmlspecialchars(
+                            $notification["message"]
+                        );
+                        ?>
                     </p>
 
 
                     <small>
+
                         Type:
-                        <?php echo htmlspecialchars($notification["type"]); ?>
+                        <?php
+                        echo htmlspecialchars(
+                            $notification["type"]
+                        );
+                        ?>
 
                         <br>
 
-                        <?php echo htmlspecialchars($notification["created_at"]); ?>
+                        <?php
+                        echo htmlspecialchars(
+                            $notification["created_at"]
+                        );
+                        ?>
+
                     </small>
 
 
-                    <?php if ($notification["is_read"] == 0) { ?>
+                    <?php
+                    if ($notification["is_read"] == 0) {
+                    ?>
 
                         <br><br>
 
@@ -136,9 +191,9 @@ require_once "../includes/sidebar.php";
 
 </main>
 
+
 <?php
 
 require_once "../includes/footer.php";
 
 ?>
-```

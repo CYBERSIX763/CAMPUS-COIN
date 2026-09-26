@@ -1,9 +1,5 @@
 <?php
-
-if (!isset($page_title)) {
-    $page_title = SITE_NAME;
-}
-
+require_once __DIR__ . "/../config/config.php";
 ?>
 
 <!DOCTYPE html>
@@ -16,11 +12,14 @@ if (!isset($page_title)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>
-        <?php echo $page_title; ?> | <?php echo SITE_NAME; ?>
+        <?php echo isset($page_title)
+            ? htmlspecialchars($page_title) . " | Campus Coin"
+            : "Campus Coin";
+        ?>
     </title>
 
-    <!-- Main CSS -->
-    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet"
+          href="<?php echo BASE_URL; ?>assets/css/style.css">
 
 </head>
 

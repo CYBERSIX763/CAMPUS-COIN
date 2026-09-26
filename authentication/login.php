@@ -46,19 +46,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Check password
             elseif (password_verify($password, $user["password_hash"])) {
 
-                loginUser(
-                    $user["user_id"],
-                    $user["name"],
-                    $user["role"]
-                );
+    loginUser(
+        $user["user_id"],
+        $user["name"],
+        $user["role"]
+    );
 
-                redirect("../dashboard/index.php");
 
-            } else {
+    // Redirect based on user role
 
-                $error = "Invalid email or password.";
+    if ($user["role"] == "admin") {
 
-            }
+        redirect("../admin/index.php");
+
+    } else {
+
+        redirect("../dashboard/index.php");
+
+    }
+
+} else {
+
+    $error = "Invalid email or password.";
+
+}
+
 
         } else {
 

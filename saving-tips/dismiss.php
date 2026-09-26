@@ -1,4 +1,4 @@
-```php
+
 <?php
 
 require_once "../config/config.php";
@@ -59,4 +59,3 @@ $stmt->close();
 redirect("index.php");
 
 ?>
-```

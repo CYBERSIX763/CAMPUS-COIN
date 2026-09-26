@@ -1,8 +1,4 @@
-```php
-<?php
-?>
-
-<footer class="site-footer">
+<footer class="footer">
 
     <p>
         &copy; <?php echo date("Y"); ?> Campus Coin. All rights reserved.
@@ -12,4 +8,3 @@
 
 </body>
 </html>
-```

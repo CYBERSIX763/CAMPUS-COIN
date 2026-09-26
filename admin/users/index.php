@@ -81,6 +81,13 @@ require_once "../sidebar.php";
         >
 
             <thead>
+                <tbody>
+
+    <?php if ($users->num_rows > 0) { ?>
+
+        <?php while ($user = $users->fetch_assoc()) { ?>
+
+            <tr>
 
                 <tr>
 
@@ -178,6 +185,7 @@ require_once "../sidebar.php";
                                         name="user_id"
                                         value="<?php echo $user["user_id"]; ?>"
                                     >
+                                    
 
                                     <button type="submit">
 
@@ -200,6 +208,26 @@ require_once "../sidebar.php";
                 <?php } ?>
 
             </tbody>
+                    <?php } ?>
+
+    <?php } else { ?>
+
+        <tr>
+
+            <td
+                colspan="6"
+                style="
+                    padding: 20px;
+                    text-align: center;
+                    border: 1px solid #ddd;
+                "
+            >
+                No users found.
+            </td>
+
+        </tr>
+
+    <?php } ?>
 
         </table>
 
@@ -213,4 +241,4 @@ require_once "../sidebar.php";
 require_once "../../includes/footer.php";
 
 ?>
-```
+

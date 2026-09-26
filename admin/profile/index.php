@@ -17,25 +17,18 @@ if ($_SESSION["user_role"] != "admin") {
     redirect("../../dashboard/index.php");
 }
 
-$user_id = intval($_GET["id"] ?? 0);
+
+$page_title = "Admin Profile";
+
+$user_id = getUserId();
 
 $error = "";
+$success = "";
 
 
 /*
 |--------------------------------------------------------------------------
-| Validate User ID
-|--------------------------------------------------------------------------
-*/
-
-if ($user_id <= 0) {
-    redirect("index.php");
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Get User
+| Get Current Admin
 |--------------------------------------------------------------------------
 */
 
@@ -59,19 +52,20 @@ $stmt->execute();
 
 $result = $stmt->get_result();
 
-$user = $result->fetch_assoc();
+$admin = $result->fetch_assoc();
 
 $stmt->close();
 
 
-if (!$user) {
-    redirect("index.php");
+if (!$admin) {
+    logoutUser();
+    redirect("../../authentication/login.php");
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| Update User
+| Update Profile
 |--------------------------------------------------------------------------
 */
 
@@ -79,7 +73,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $name = trim($_POST["name"] ?? "");
     $email = trim($_POST["email"] ?? "");
-    $role = trim($_POST["role"] ?? "");
 
 
     /*
@@ -90,21 +83,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if ($name == "" || $email == "") {
 
-    $error = "Name and email are required.";
+        $error = "Name and email are required.";
 
-} elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 
-    $error = "Please enter a valid email address.";
+        $error = "Please enter a valid email address.";
 
-} elseif ($role != "student" && $role != "admin") {
-
-    $error = "Invalid user role.";
-
-} elseif ($user_id == getUserId() && $role != "admin") {
-
-    $error = "You cannot remove your own admin role.";
-
-} else {
+    } else {
 
 
         /*
@@ -142,18 +127,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             /*
             |--------------------------------------------------------------------------
-            | Save Old Values For Admin Log
-            |--------------------------------------------------------------------------
-            */
-
-            $old_name = $user["name"];
-            $old_email = $user["email"];
-            $old_role = $user["role"];
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Update
+            | Update Admin Profile
             |--------------------------------------------------------------------------
             */
 
@@ -162,16 +136,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                  SET
                     name = ?,
                     email = ?,
-                    role = ?,
                     updated_at = NOW()
                  WHERE user_id = ?"
             );
 
             $update_stmt->bind_param(
-                "sssi",
+                "ssi",
                 $name,
                 $email,
-                $role,
                 $user_id
             );
 
@@ -180,63 +152,61 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 /*
                 |--------------------------------------------------------------------------
-                | Admin Log
+                | Update Session Name
                 |--------------------------------------------------------------------------
                 */
 
-                $description =
-                    "Updated user #" . $user_id .
-                    ". Name: " . $old_name . " -> " . $name .
-                    ", Email: " . $old_email . " -> " . $email .
-                    ", Role: " . $old_role . " -> " . $role;
-
-
-                logAdminAction(
-                    getUserId(),
-                    "update_user",
-                    "user",
-                    $user_id,
-                    $description
-                );
+                $_SESSION["user_name"] = $name;
 
 
                 /*
                 |--------------------------------------------------------------------------
-                | If Admin Changed Their Own Role
+                | Admin Log
                 |--------------------------------------------------------------------------
                 */
 
-                if ($user_id == getUserId()) {
-
-                    $_SESSION["user_role"] = $role;
-
-                    if ($role != "admin") {
-                        $update_stmt->close();
-                        redirect("../../dashboard/index.php");
-                    }
-                }
+                logAdminAction(
+                    $user_id,
+                    "update_profile",
+                    "user",
+                    $user_id,
+                    "Updated their own admin profile."
+                );
 
 
-                $update_stmt->close();
+                $success = "Profile updated successfully.";
 
-                redirect("index.php");
+
+                /*
+                |--------------------------------------------------------------------------
+                | Update Displayed Data
+                |--------------------------------------------------------------------------
+                */
+
+                $admin["name"] = $name;
+                $admin["email"] = $email;
 
             } else {
 
-                $error = "Failed to update user.";
-
-                $update_stmt->close();
+                $error = "Failed to update profile.";
             }
+
+
+            $update_stmt->close();
         }
     }
 }
 
 
-$page_title = "Edit User";
-
+/*
+|--------------------------------------------------------------------------
+| Page
+|--------------------------------------------------------------------------
+*/
 
 require_once "../../includes/header.php";
 require_once "../../includes/navbar.php";
+
 ?>
 
 <div class="admin-layout">
@@ -249,8 +219,27 @@ require_once "../sidebar.php";
 <main class="main-content">
 
     <h1 class="page-title">
-        Edit User
+        Admin Profile
     </h1>
+
+    <p class="page-description">
+        Manage your administrator account information.
+    </p>
+
+
+    <?php if ($success != "") { ?>
+
+        <div style="
+            background-color: #dcfce7;
+            color: #166534;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+        ">
+            <?php echo htmlspecialchars($success); ?>
+        </div>
+
+    <?php } ?>
 
 
     <?php if ($error != "") { ?>
@@ -270,6 +259,13 @@ require_once "../sidebar.php";
 
     <div class="card">
 
+        <h2>
+            Account Information
+        </h2>
+
+        <br>
+
+
         <form method="POST">
 
 
@@ -284,7 +280,7 @@ require_once "../sidebar.php";
                 <input
                     type="text"
                     name="name"
-                    value="<?php echo htmlspecialchars($user["name"]); ?>"
+                    value="<?php echo htmlspecialchars($admin["name"]); ?>"
                     required
                     style="
                         width: 100%;
@@ -307,7 +303,7 @@ require_once "../sidebar.php";
                 <input
                     type="email"
                     name="email"
-                    value="<?php echo htmlspecialchars($user["email"]); ?>"
+                    value="<?php echo htmlspecialchars($admin["email"]); ?>"
                     required
                     style="
                         width: 100%;
@@ -319,7 +315,7 @@ require_once "../sidebar.php";
             </div>
 
 
-            <div style="margin-bottom: 20px;">
+            <div style="margin-bottom: 15px;">
 
                 <label>
                     Role
@@ -327,30 +323,40 @@ require_once "../sidebar.php";
 
                 <br>
 
-                <select
-                    name="role"
+                <input
+                    type="text"
+                    value="Administrator"
+                    readonly
                     style="
                         width: 100%;
                         padding: 10px;
                         margin-top: 5px;
+                        background-color: #f3f4f6;
                     "
                 >
 
-                    <option
-                        value="student"
-                        <?php if ($user["role"] == "student") echo "selected"; ?>
-                    >
-                        Student
-                    </option>
+            </div>
 
-                    <option
-                        value="admin"
-                        <?php if ($user["role"] == "admin") echo "selected"; ?>
-                    >
-                        Admin
-                    </option>
 
-                </select>
+            <div style="margin-bottom: 20px;">
+
+                <label>
+                    Account Status
+                </label>
+
+                <br>
+
+                <input
+                    type="text"
+                    value="<?php echo ($admin["is_active"] == 1) ? "Active" : "Inactive"; ?>"
+                    readonly
+                    style="
+                        width: 100%;
+                        padding: 10px;
+                        margin-top: 5px;
+                        background-color: #f3f4f6;
+                    "
+                >
 
             </div>
 
@@ -362,22 +368,14 @@ require_once "../sidebar.php";
                 Save Changes
             </button>
 
-
-            <a
-                href="index.php"
-                style="margin-left: 10px;"
-            >
-                Cancel
-            </a>
-
         </form>
 
     </div>
 
 </main>
 
-
 </div>
+
 
 <?php
 

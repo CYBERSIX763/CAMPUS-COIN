@@ -1,17 +1,28 @@
-```php
 <?php
 
 require_once "../config/config.php";
 
 
+/*
+|--------------------------------------------------------------------------
+| User Must Be Logged In
+|--------------------------------------------------------------------------
+*/
+
 if (!isLoggedIn()) {
     redirect("../authentication/login.php");
 }
 
+
 $user_id = getUserId();
 
 
-// Get active budgets
+/*
+|--------------------------------------------------------------------------
+| Get Active Budgets
+|--------------------------------------------------------------------------
+*/
+
 $stmt = $conn->prepare(
     "SELECT
         b.budget_id,
@@ -27,24 +38,43 @@ $stmt = $conn->prepare(
      AND b.is_active = 1"
 );
 
-$stmt->bind_param("i", $user_id);
+$stmt->bind_param(
+    "i",
+    $user_id
+);
 
 $stmt->execute();
 
 $budgets = $stmt->get_result();
 
-$stmt->close();
 
+/*
+|--------------------------------------------------------------------------
+| Check Each Budget
+|--------------------------------------------------------------------------
+*/
 
-// Check each budget
 while ($budget = $budgets->fetch_assoc()) {
 
-    $budget_amount = floatval($budget["amount"]);
+    $budget_amount = floatval(
+        $budget["amount"]
+    );
 
 
-    // Get expenses for this budget month
+    if ($budget_amount <= 0) {
+        continue;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Get Expenses For Same Month + Category
+    |--------------------------------------------------------------------------
+    */
+
     $expense_stmt = $conn->prepare(
-        "SELECT COALESCE(SUM(amount), 0) AS total_spent
+        "SELECT
+            COALESCE(SUM(amount), 0) AS total_spent
          FROM expenses
          WHERE user_id = ?
          AND category_id = ?
@@ -60,28 +90,33 @@ while ($budget = $budgets->fetch_assoc()) {
 
     $expense_stmt->execute();
 
-    $expense_result = $expense_stmt->get_result();
+    $expense_result =
+        $expense_stmt->get_result();
 
-    $expense_data = $expense_result->fetch_assoc();
+    $expense_data =
+        $expense_result->fetch_assoc();
 
     $expense_stmt->close();
 
 
-    $total_spent = floatval($expense_data["total_spent"]);
-
-
-    if ($budget_amount <= 0) {
-        continue;
-    }
-
-
-    // Calculate percentage
-    $percentage = ($total_spent / $budget_amount) * 100;
+    $total_spent = floatval(
+        $expense_data["total_spent"]
+    );
 
 
     /*
     |--------------------------------------------------------------------------
-    | Decide notification type
+    | Calculate Percentage
+    |--------------------------------------------------------------------------
+    */
+
+    $percentage =
+        ($total_spent / $budget_amount) * 100;
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Decide Notification
     |--------------------------------------------------------------------------
     */
 
@@ -89,20 +124,28 @@ while ($budget = $budgets->fetch_assoc()) {
 
         $title = "Budget Exceeded";
 
-        $type = "budget_exceeded";
+        $notification_state = "exceeded";
 
         $message =
             "Your " .
             $budget["category_name"] .
             " budget for " .
             $budget["month_year"] .
-            " has been exceeded.";
+            " has been exceeded. You have spent Rs. " .
+            number_format($total_spent, 2) .
+            " out of Rs. " .
+            number_format($budget_amount, 2) .
+            ".";
 
-    } elseif ($percentage >= $budget["alert_percentage"]) {
+
+    } elseif (
+        $percentage >=
+        floatval($budget["alert_percentage"])
+    ) {
 
         $title = "Budget Alert";
 
-        $type = "budget_alert";
+        $notification_state = "alert";
 
         $message =
             "Your " .
@@ -113,6 +156,7 @@ while ($budget = $budgets->fetch_assoc()) {
             number_format($percentage, 1) .
             "%.";
 
+
     } else {
 
         continue;
@@ -121,12 +165,35 @@ while ($budget = $budgets->fetch_assoc()) {
 
     /*
     |--------------------------------------------------------------------------
-    | Create unique notification key
+    | Notification Type
     |--------------------------------------------------------------------------
+    |
+    | Must match database ENUM:
+    |
+    | budget
+    | saving
+    | system
+    | report
+    | goal
+    |
+    */
+
+    $type = "budget";
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Unique Notification Key
+    |--------------------------------------------------------------------------
+    |
+    | ALERT and EXCEEDED must have different keys.
+    |
     */
 
     $notification_key =
         $type .
+        "_" .
+        $notification_state .
         "_" .
         $user_id .
         "_" .
@@ -137,7 +204,7 @@ while ($budget = $budgets->fetch_assoc()) {
 
     /*
     |--------------------------------------------------------------------------
-    | Insert only if this notification does not exist
+    | Insert Only Once
     |--------------------------------------------------------------------------
     */
 
@@ -163,13 +230,37 @@ while ($budget = $budgets->fetch_assoc()) {
         $notification_key
     );
 
-    $notification_stmt->execute();
+
+    if (!$notification_stmt->execute()) {
+
+        $notification_stmt->close();
+        $stmt->close();
+
+        die(
+            "Notification insert failed."
+        );
+    }
+
 
     $notification_stmt->close();
 }
 
 
-redirect("index.php");
+$stmt->close();
+
+
+/*
+|--------------------------------------------------------------------------
+| Redirect Only When Opened Directly
+|--------------------------------------------------------------------------
+*/
+
+if (
+    basename($_SERVER["PHP_SELF"])
+    == "create-budget-alert.php"
+) {
+
+    redirect("index.php");
+}
 
 ?>
-```

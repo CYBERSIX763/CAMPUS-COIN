@@ -104,6 +104,22 @@ $data = $result->fetch_assoc();
 $active_users = $data["active_users"];
 
 $stmt->close();
+// Inactive users
+$stmt = $conn->prepare(
+    "SELECT COUNT(*) AS inactive_users
+     FROM users
+     WHERE is_active = 0"
+);
+
+$stmt->execute();
+
+$result = $stmt->get_result();
+
+$data = $result->fetch_assoc();
+
+$inactive_users = $data["inactive_users"];
+
+$stmt->close();
 
 
 require_once "../includes/header.php";
@@ -114,9 +130,9 @@ require_once "../includes/navbar.php";
 
 <?php
 require_once "sidebar.php";
-?>
 
-<
+
+?>
 
 <main class="main-content">
 
@@ -158,6 +174,10 @@ require_once "sidebar.php";
             <strong>Active Users:</strong>
             <?php echo $active_users; ?>
         </p>
+        <p>
+    <strong>Inactive Users:</strong>
+    <?php echo $inactive_users; ?>
+</p>
 
     </div>
 

@@ -149,49 +149,49 @@
 </style>
 <aside class="admin-sidebar">
 
-    <div class="admin-sidebar-title">
-        ADMIN PANEL
-    </div>
+<a href="<?php echo BASE_URL; ?>admin/index.php">
+    Dashboard
+</a>
 
-    <a href="<?php echo BASE_URL; ?>/admin/index.php">
-        Dashboard
-    </a>
+<a href="<?php echo BASE_URL; ?>admin/users/index.php">
+    Users
+</a>
 
-    <a href="<?php echo BASE_URL; ?>/admin/users/index.php">
-        Users
-    </a>
+<a href="<?php echo BASE_URL; ?>admin/categories/index.php">
+    Categories
+</a>
 
-    <a href="<?php echo BASE_URL; ?>/admin/categories/index.php">
-        Categories
-    </a>
+<a href="<?php echo BASE_URL; ?>admin/saving-tips/index.php">
+    Saving Tips
+</a>
 
-    <a href="<?php echo BASE_URL; ?>/admin/saving-tips/index.php">
-        Saving Tips
-    </a>
+<a href="<?php echo BASE_URL; ?>admin/notifications/index.php">
+    Notifications
+</a>
 
-    <a href="<?php echo BASE_URL; ?>/admin/notifications/index.php">
-        Notifications
-    </a>
+<a href="<?php echo BASE_URL; ?>admin/transactions/index.php">
+    Transactions
+</a>
 
-    <a href="<?php echo BASE_URL; ?>/admin/transactions/index.php">
-        Transactions
-    </a>
+<a href="<?php echo BASE_URL; ?>admin/reports/index.php">
+    Reports
+</a>
 
-    <a href="<?php echo BASE_URL; ?>/admin/reports/index.php">
-        Reports
-    </a>
+<a href="<?php echo BASE_URL; ?>admin/logs/index.php">
+    Admin logs
+</a>
 
-    <div class="admin-sidebar-title">
-        ACCOUNT
-    </div>
+<div class="sidebar-title">
+    ACCOUNT
+</div>
 
-    <a href="<?php echo BASE_URL; ?>/admin/profile/index.php">
-        Profile
-    </a>
+<a href="<?php echo BASE_URL; ?>admin/profile/index.php">
+    Profile
+</a>
 
-    <a href="<?php echo BASE_URL; ?>/authentication/logout.php">
-        Logout
-    </a>
+<a href="<?php echo BASE_URL; ?>authentication/logout.php">
+    Logout
+</a>
 
 </aside>
 

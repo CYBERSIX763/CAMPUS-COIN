@@ -1,4 +1,4 @@
-```php
+
 <?php
 
 require_once "../config/config.php";
@@ -328,20 +328,19 @@ require_once "../includes/sidebar.php";
 
 
                     <a
-                        href="edit.php?id=<?php echo $note["note_id"]; ?>"
-                        class="btn"
-                    >
-                        Edit
-                    </a>
+    href="edit.php?id=<?php echo $note["note_id"]; ?>"
+    class="btn"
+>
+    Edit
+</a>
 
-
-                    <a
-                        href="delete.php?id=<?php echo $note["note_id"]; ?>"
-                        class="btn"
-                        onclick="return confirm('Are you sure you want to delete this note?');"
-                    >
-                        Delete
-                    </a>
+<a
+    href="delete.php?id=<?php echo $note["note_id"]; ?>"
+    class="btn"
+    onclick="return confirm('Are you sure you want to delete this note?');"
+>
+    Delete
+</a>
 
                 </div>
 
@@ -365,4 +364,3 @@ require_once "../includes/sidebar.php";
 require_once "../includes/footer.php";
 
 ?>
-```

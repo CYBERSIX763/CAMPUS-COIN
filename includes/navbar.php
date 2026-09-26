@@ -1,18 +1,19 @@
 <nav class="navbar">
 
-    <div class="navbar-left">
-
-        <a href="<?php echo BASE_URL; ?>../dashboard/index.php" class="logo">
+    <div class="navbar-brand">
+        <a href="<?php echo BASE_URL; ?>dashboard/index.php">
             Campus Coin
         </a>
-
     </div>
 
-    <div class="navbar-right">
+    <div class="navbar-user">
 
-        <span class="navbar-user">
-            Welcome, Student
-        </span>
+        <?php if (isLoggedIn()) { ?>
+
+            Welcome,
+            <?php echo htmlspecialchars($_SESSION["user_name"]); ?>
+
+        <?php } ?>
 
     </div>
 
